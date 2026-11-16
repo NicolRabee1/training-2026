@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Training 2026 — Grid Layout</title>
+    <style>
+        :root {
+            --red: #960000;
+            --red-light: #b00000;
+            --sidebar-width: 184px;
+            --top-height: 40%;
+            --border: #e5e5e5;
+            --sidebar: #f4f4f4
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #111;
+            background: #fff
+        }
+
+        button {
+            font: inherit;
+            cursor: pointer
+        }
+
+        .app {
+            height: 100dvh;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 0 0 9px 9px
+        }
+
+        .header {
+            flex: none;
+            background: var(--red);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px #0002;
+            position: relative;
+            z-index: 5;
+            max-height: 38dvh;
+            min-height: 37px
+        }
+
+        .topbar {
+            min-height: 37px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 4px 12px;
+            flex: none
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            font-weight: 700;
+            font-size: 16px;
+            white-space: nowrap
+        }
+
+        .brand-badge {
+            display: grid;
+            place-items: center;
+            background: #fff;
+            color: var(--red);
+            border-radius: 6px;
+            width: 23px;
+            height: 23px;
+            flex: none;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 900
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            white-space: nowrap
+        }
+
+        .nav-actions button {
+            border: 0;
+            background: transparent;
+            color: white;
+            border-radius: 3px;
+            padding: 7px 9px;
+            font-size: 11px;
+            transition: background .18s, transform .18s
+        }
+
+        .nav-actions button:hover {
+            background: #ffffff23;
+            transform: translateY(-1px)
+        }
+
+        .nav-actions button:focus-visible,
+        .plus:focus-visible,
+        .menu-item:focus-visible {
+            outline: 2px solid #ffbc9b;
+            outline-offset: -2px
+        }
+
+        .nav-actions svg {
+            height: 12px;
+            width: 12px;
+            vertical-align: -2px;
+            margin-inline-end: 4px
+        }
+
+        .updates {
+            overflow-y: auto;
+            min-height: 0;
+            padding: 0 12px 0 35px;
+            font: 12px/1.3 Arial, sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: #c77b7b transparent
+        }
+
+        .updates:empty {
+            display: none
+        }
+
+        .update {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 1px 0
+        }
+
+        .remove-update {
+            font: 13px Arial, sans-serif;
+            color: #fff9;
+            background: transparent;
+            border: 0;
+            border-radius: 3px;
+            line-height: 1;
+            padding: 0 3px
+        }
+
+        .remove-update:hover {
+            color: #fff;
+            background: #ffffff32
+        }
+
+        .updates:not(:empty) {
+            padding-bottom: 10px
+        }
+
+        .shell {
+            min-height: 0;
+            flex: 1;
+            display: flex;
+            direction: ltr;
+            overflow: hidden
+        }
+
+        .sidebar {
+            flex: 0 0 var(--sidebar-width);
+            width: var(--sidebar-width);
+            min-width: 0;
+            max-width: calc(100% - 82px);
+            background: var(--sidebar);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 1px 0 3px #0001;
+            z-index: 2;
+            transition: box-shadow .2s
+        }
+
+        .sidebar:hover {
+            box-shadow: 2px 0 11px #0003
+        }
+
+        .sidebar-scroll {
+            height: 100%;
+            overflow: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #bdbdbd transparent;
+            padding: 6px 0
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: 9px;
+            padding: 9px 12px;
+            border: 0;
+            background: transparent;
+            color: #373737;
+            font: 12px Arial, sans-serif;
+            width: 100%;
+            text-align: left;
+            white-space: nowrap;
+            transition: background .18s, color .18s
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: #eee0e0;
+            color: #790000
+        }
+
+        .menu-item svg {
+            width: 15px;
+            height: 15px;
+            min-width: 15px;
+            stroke-width: 1.9
+        }
+
+        .menu-item span {
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 7px;
+            z-index: 4;
+            cursor: col-resize;
+            touch-action: none;
+            background: transparent;
+            transition: background .2s
+        }
+
+        .resize-handle:hover,
+        .resize-handle.dragging {
+            background: #b24d4d44
+        }
+
+        .resize-handle:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 2px;
+            width: 3px;
+            height: 28px;
+            transform: translateY(-50%);
+            border-left: 1px solid #8d8d8d;
+            border-right: 1px solid #8d8d8d;
+            opacity: 0
+        }
+
+        .resize-handle:hover:after,
+        .resize-handle.dragging:after {
+            opacity: 1
+        }
+
+        .workspace {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: white;
+            overflow: hidden
+        }
+
+        .hero {
+            height: var(--top-height);
+            min-height: 90px;
+            flex: none;
+            display: flex;
+            overflow: hidden
+        }
+
+        .hero-panel {
+            width: 50%;
+            min-width: 0;
+            position: relative;
+            overflow: hidden
+        }
+
+        .animation-panel {
+            background: #a40000;
+            display: grid;
+            place-items: center;
+            isolation: isolate
+        }
+
+        .animation-heading {
+            position: relative;
+            z-index: 2;
+            color: white;
+            font-size: clamp(12px, 1.6vw, 19px);
+            font-weight: 700;
+            text-align: center;
+            pointer-events: none;
+            white-space: nowrap;
+            text-shadow: 0 1px 2px #5007
+        }
+
+        .shapes-track {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            width: 200%;
+            animation: glide 20s linear infinite;
+            opacity: .9;
+            pointer-events: none
+        }
+
+        .shape-set {
+            width: 50%;
+            height: 100%;
+            position: relative;
+            flex: none;
+            overflow: hidden
+        }
+
+        .shape {
+            position: absolute;
+            background: #ffffff35;
+            border-radius: 0 28px 0 28px;
+            box-shadow: inset 0 1px 2px #fff1
+        }
+
+        .s1 {
+            width: 23%;
+            height: 37%;
+            left: 3%;
+            top: 12%
+        }
+
+        .s2 {
+            width: 21%;
+            height: 42%;
+            left: 34%;
+            top: 42%;
+            border-radius: 15px 36px 14px 25px
+        }
+
+        .s3 {
+            width: 23%;
+            height: 38%;
+            left: 68%;
+            top: 3%
+        }
+
+        .s4 {
+            width: 14%;
+            height: 25%;
+            left: 7%;
+            top: 76%;
+            border-radius: 17px
+        }
+
+        .s5 {
+            width: 20%;
+            height: 29%;
+            left: 77%;
+            top: 74%;
+            border-radius: 25px 25px 5px 5px
+        }
+
+        .s6 {
+            width: 25%;
+            height: 48%;
+            left: 101%;
+            top: 29%;
+            border-radius: 50px;
+            border: 6px solid #ffffff42;
+            background: transparent
+        }
+
+        .outline {
+            position: absolute;
+            width: 20%;
+            height: 42%;
+            top: 22%;
+            left: 53%;
+            border: 5px solid #ffffff32;
+            border-radius: 15px 50px 10px 10px
+        }
+
+        .small-outline {
+            position: absolute;
+            left: 27%;
+            top: 55%;
+            height: 14%;
+            aspect-ratio: 1;
+            border: 2px solid #ffffff26;
+            border-radius: 8px
+        }
+
+        @keyframes glide {
+            from {
+                transform: translateX(0)
+            }
+
+            to {
+                transform: translateX(-50%)
+            }
+        }
+
+        .heart-panel {
+            background: #fafafa;
+            display: grid;
+            place-items: center;
+            touch-action: pan-y
+        }
+
+        #heart-view {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: grab
+        }
+
+        #heart-view:active {
+            cursor: grabbing
+        }
+
+        .heart-status {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            gap: 7px;
+            padding: 15px;
+            color: #777;
+            font: 12px/1.4 Arial, sans-serif;
+            pointer-events: none
+        }
+
+        .heart-status svg {
+            width: 35px;
+            height: 35px;
+            color: #a54040
+        }
+
+        .heart-status small {
+            font-size: 10px;
+            color: #888
+        }
+
+        .heart-status[hidden] {
+            display: none
+        }
+
+        .article {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 13px 13px 28px;
+            scrollbar-width: thin;
+            scrollbar-color: #bcbcbc transparent;
+            line-height: 1.3
+        }
+
+        .article h1 {
+            font-size: 19px;
+            line-height: 1.2;
+            margin: 0 0 12px;
+            font-weight: 700
+        }
+
+        .article .intro {
+            font-size: 12px;
+            margin: 0 0 12px
+        }
+
+        .article h2 {
+            font-size: 15px;
+            margin: 11px 0 9px
+        }
+
+        .tech-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+            margin: 0 0 10px
+        }
+
+        .tech-logo {
+            width: 54px;
+            height: 54px;
+            min-width: 54px;
+            border-radius: 6px;
+            color: white;
+            display: grid;
+            place-items: center;
+            font: bold 17px Arial, sans-serif;
+            box-shadow: 0 2px 4px #0002
+        }
+
+        .html-logo {
+            background: #e94d28
+        }
+
+        .css-logo {
+            background: #2852df
+        }
+
+        .js-logo {
+            background: #f0d742;
+            color: #222
+        }
+
+        .tech-row p,
+        .article .explain {
+            font-size: 12px;
+            margin: 0;
+            line-height: 1.3
+        }
+
+        .article .explain {
+            margin: 0 0 10px
+        }
+
+        .footer {
+            height: 23px;
+            min-height: 23px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid var(--border);
+            color: #666;
+            font: 10px Arial, sans-serif;
+            background: #fff;
+            position: relative;
+            z-index: 1;
+            text-align: center
+        }
+
+        .plus {
+            position: absolute;
+            right: 13px;
+            bottom: 10px;
+            z-index: 3;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            background: var(--red);
+            box-shadow: 0 2px 6px #0004;
+            display: grid;
+            place-items: center;
+            font: 27px/1 Arial, sans-serif;
+            transition: transform .22s ease, box-shadow .22s, background .22s
+        }
+
+        .plus:hover {
+            transform: translateY(-5px) rotate(90deg) scale(1.1);
+            box-shadow: 0 6px 12px #0004;
+            background: #b40000
+        }
+
+        [dir=rtl] .topbar {
+            direction: rtl
+        }
+
+        [dir=rtl] .brand,
+        [dir=rtl] .nav-actions {
+            direction: rtl
+        }
+
+        [dir=rtl] .updates {
+            direction: rtl;
+            padding: 0 35px 0 12px
+        }
+
+        [dir=rtl] .shell {
+            flex-direction: row-reverse
+        }
+
+        [dir=rtl] .sidebar-scroll {
+            direction: rtl
+        }
+
+        [dir=rtl] .menu-item {
+            direction: rtl;
+            text-align: right
+        }
+
+        [dir=rtl] .resize-handle {
+            right: auto;
+            left: 0
+        }
+
+        [dir=rtl] .hero {
+            flex-direction: row-reverse
+        }
+
+        [dir=rtl] .article {
+            text-align: right;
+            direction: rtl
+        }
+
+        [dir=rtl] .tech-row {
+            flex-direction: row-reverse;
+            direction: ltr
+        }
+
+        [dir=rtl] .tech-row p {
+            direction: rtl;
+            text-align: right;
+            flex: 1
+        }
+
+        [dir=rtl] .plus {
+            right: 13px
+        }
+
+        [dir=rtl] .footer {
+            direction: rtl
+        }
+
+        @media(max-width:500px) {
+            .topbar {
+                gap: 5px;
+                padding: 4px 6px
+            }
+
+            .brand {
+                font-size: 12px;
+                gap: 4px
+            }
+
+            .brand-badge {
+                width: 20px;
+                height: 20px
+            }
+
+            .nav-actions {
+                gap: 0
+            }
+
+            .nav-actions button {
+                font-size: 10px;
+                padding: 6px 4px
+            }
+
+            .nav-actions svg {
+                width: 10px;
+                height: 10px;
+                margin-inline-end: 2px
+            }
+
+            .menu-item {
+                font-size: 11px;
+                padding: 8px
+            }
+
+            .article {
+                padding: 10px 9px 27px
+            }
+
+            .hero {
+                min-height: 90px
+            }
+
+            .tech-row {
+                gap: 8px
+            }
+
+            .tech-logo {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                font-size: 14px
+            }
+
+            .article h1 {
+                font-size: 16px
+            }
+        }
+
+        @media(max-height:400px) {
+            .hero {
+                height: 35%;
+                min-height: 72px
+            }
+
+            .header {
+                max-height: 42dvh
+            }
+
+            .menu-item {
+                padding-block: 7px
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+            .shapes-track {
+                animation-duration: 40s
+            }
+
+            .plus,
+            .nav-actions button,
+            .menu-item {
+                transition: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app">
+        <header class="header">
+            <div class="topbar">
+                <div class="brand"><span class="brand-badge" aria-hidden="true">⚑</span><span id="site-title">Training
+                        2026</span></div>
+                <nav class="nav-actions" aria-label="Page actions">
+                    <button id="language-btn" type="button"><span aria-hidden="true">◎</span> <span
+                            id="language-label">العربية</span></button>
+                    <button id="add-btn" type="button"><span aria-hidden="true">＋</span> <span id="add-label">Add
+                            content</span></button>
+                    <button id="clear-btn" type="button"><span aria-hidden="true">♜</span> <span id="clear-label">Clear
+                            content</span></button>
+                </nav>
+            </div>
+            <div id="updates" class="updates" aria-live="polite"></div>
+        </header>
+        <div class="shell">
+            <aside class="sidebar" id="sidebar" aria-label="Sidebar navigation">
+                <div class="sidebar-scroll">
+                    <nav id="menu"></nav>
+                </div>
+                <div id="resize-handle" class="resize-handle" role="separator" aria-orientation="vertical"
+                    aria-label="Resize sidebar" tabindex="0" aria-valuemin="95" aria-valuemax="600" aria-valuenow="184">
+                </div>
+            </aside>
+            <main class="workspace">
+                <section class="hero" aria-label="Interactive demonstrations">
+                    <div class="hero-panel animation-panel">
+                        <div class="shapes-track" aria-hidden="true">
+                            <div class="shape-set">
+                                <div class="shape s1"></div>
+                                <div class="shape s2"></div>
+                                <div class="shape s3"></div>
+                                <div class="shape s4"></div>
+                                <div class="shape s5"></div>
+                                <div class="outline"></div>
+                                <div class="small-outline"></div>
+                            </div>
+                            <div class="shape-set">
+                                <div class="shape s1"></div>
+                                <div class="shape s2"></div>
+                                <div class="shape s3"></div>
+                                <div class="shape s4"></div>
+                                <div class="shape s5"></div>
+                                <div class="outline"></div>
+                                <div class="small-outline"></div>
+                            </div>
+                        </div>
+                        <div class="animation-heading">CSS Animation</div>
+                    </div>
+                    <div class="hero-panel heart-panel" id="heart-panel">
+                        <canvas id="heart-view"
+                            aria-label="Interactive 3D heart model; drag to rotate, scroll to zoom"></canvas>
+                        <div class="heart-status" id="heart-status"><span id="heart-info">Loading heart model…</span>
+                        </div>
+                    </div>
+                </section>
+                <article class="article" id="article">
+                    <h1 id="article-title">HTML, CSS &amp; JavaScript</h1>
+                    <p class="intro" id="intro">The web platform is built on three complementary technologies. Each has
+                        a distinct job, and together they form every page you browse.</p>
+                    <h2>HTML</h2>
+                    <div class="tech-row">
+                        <div class="tech-logo html-logo">HTML</div>
+                        <p id="html-copy">HTML (HyperText Markup Language) provides the structure of a page: headings,
+                            paragraphs, links, images, and forms. It gives the browser a document to render and gives
+                            assistive tools something meaningful to read.</p>
+                    </div>
+                    <h2>CSS</h2>
+                    <div class="tech-row">
+                        <div class="tech-logo css-logo">CSS</div>
+                        <p id="css-copy">CSS (Cascading Style Sheets) controls presentation: layout, color, spacing,
+                            typography, and responsiveness. It lets the same HTML adapt to different screen sizes and
+                            themes without changing the markup.</p>
+                    </div>
+                    <h2>JavaScript</h2>
+                    <div class="tech-row">
+                        <div class="tech-logo js-logo">JS</div>
+                        <p id="js-copy">JavaScript adds behavior. It runs in the browser to respond to user interaction,
+                            update the page without a reload, fetch data from a server, and tie HTML and CSS together
+                            into an interactive experience.</p>
+                    </div>
+                    <h2 id="together-title">How they work together</h2>
+                    <p class="explain" id="together-copy">A browser parses HTML into the DOM, applies CSS rules to
+                        determine how each element looks, and runs JavaScript to modify both the DOM and the styles over
+                        time. Changing text, hiding an element, or reacting to a click all rely on this pipeline.</p>
+                </article>
+                <button class="plus" id="plus-btn" aria-label="Add update" title="Add update" type="button">+</button>
+                <footer class="footer" id="footer">© 2026 Training 2026. All rights reserved.</footer>
+            </main>
+        </div>
+    </div>
+    <script>
+        (() => {
+            'use strict';
+            const $ = id => document.getElementById(id);
+            const menuItems = [
+                ['Dashboard', 'layout-dashboard', '#5988dd'], ['HTML Editor', 'code-xml', '#33ba99'], ['CSS Styles', 'paintbrush', '#eba23c'],
+                ['JS Console', 'square-terminal', '#cc68a2'], ['Components', 'blocks', '#5c99e5'], ['Templates', 'panels-top-left', '#44bfae'],
+                ['Snippets', 'clipboard-list', '#e3a435'], ['Projects', 'folder', '#d56b94'], ['Live Preview', 'eye', '#639cdb'],
+                ['Responsive Design', 'monitor-smartphone', '#3cbf9c'], ['Color Palette', 'palette', '#e1b14b'], ['Typography', 'case-sensitive', '#df83b4'],
+                ['Animations', 'orbit', '#6390db'], ['Debugger', 'bug', '#3bb79e'], ['Settings', 'sun', '#e7ae52']
+            ];
+            const tr = {
+                en: {
+                    title: 'Training 2026', language: 'العربية', add: 'Add content', clear: 'Clear content', update: 'Update', footer: '© 2026 Training 2026. All rights reserved.',
+                    article: 'HTML, CSS & JavaScript', intro: 'The web platform is built on three complementary technologies. Each has a distinct job, and together they form every page you browse.',
+                    html: 'HTML (HyperText Markup Language) provides the structure of a page: headings, paragraphs, links, images, and forms. It gives the browser a document to render and gives assistive tools something meaningful to read.',
+                    css: 'CSS (Cascading Style Sheets) controls presentation: layout, color, spacing, typography, and responsiveness. It lets the same HTML adapt to different screen sizes and themes without changing the markup.',
+                    js: 'JavaScript adds behavior. It runs in the browser to respond to user interaction, update the page without a reload, fetch data from a server, and tie HTML and CSS together into an interactive experience.',
+                    together: 'How they work together', togetherCopy: 'A browser parses HTML into the DOM, applies CSS rules to determine how each element looks, and runs JavaScript to modify both the DOM and the styles over time. Changing text, hiding an element, or reacting to a click all rely on this pipeline.',
+                    menu: ['Dashboard', 'HTML Editor', 'CSS Styles', 'JS Console', 'Components', 'Templates', 'Snippets', 'Projects', 'Live Preview', 'Responsive Design', 'Color Palette', 'Typography', 'Animations', 'Debugger', 'Settings'], heartMissing: 'Place human-heart.glb next to this HTML file.', heartHint: 'Open using a local server (e.g. Live Server).', heartError: 'Could not load the 3D heart model.'
+                },
+                ar: {
+                    title: 'تدريب 2026', language: 'English', add: 'إضافة محتوى', clear: 'مسح المحتوى', update: 'تحديث', footer: '© 2026 تدريب 2026. جميع الحقوق محفوظة.',
+                    article: 'HTML و CSS و JavaScript', intro: 'تعتمد صفحات الويب على ثلاث تقنيات متكاملة، ولكل منها وظيفة مختلفة، وتعمل معًا لإنشاء صفحات الويب التي نتصفحها.',
+                    html: 'تُستخدم HTML (لغة ترميز النص التشعبي) لبناء هيكل الصفحة، مثل العناوين والفقرات والروابط والصور والنماذج. وهي تتيح للمتصفح عرض المحتوى بشكل منظم.',
+                    css: 'تتحكم CSS (أوراق الأنماط المتتالية) في مظهر الصفحة، مثل التخطيط والألوان والمسافات والخطوط والتجاوب مع أحجام الشاشات المختلفة، دون تغيير بنية HTML.',
+                    js: 'تضيف JavaScript التفاعل والسلوك إلى الصفحة، فتستجيب للنقرات وإجراءات المستخدم، وتحدّث المحتوى دون إعادة تحميل الصفحة، وتتواصل مع الخوادم عند الحاجة.',
+                    together: 'كيف تعمل معًا', togetherCopy: 'يقرأ المتصفح HTML لبناء عناصر الصفحة، ويطبّق CSS لتنسيقها، ثم ينفّذ JavaScript لتغيير المحتوى والمظهر والاستجابة لتفاعل المستخدم.',
+                    menu: ['لوحة التحكم', 'محرر HTML', 'أنماط CSS', 'وحدة تحكم JS', 'المكونات', 'القوالب', 'المقتطفات', 'المشاريع', 'معاينة مباشرة', 'تصميم متجاوب', 'لوحة الألوان', 'الخطوط', 'التحريكات', 'تصحيح الأخطاء', 'الإعدادات'], heartMissing: 'ضع ملف human-heart.glb بجانب ملف HTML.', heartHint: 'افتح الصفحة باستخدام خادم محلي مثل Live Server.', heartError: 'تعذر تحميل نموذج القلب ثلاثي الأبعاد.'
+                }
+            };
+            let lang = 'en', nextId = 1, updates = [], active = 0;
+            const icons = {
+                'layout-dashboard': '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+                'code-xml': '<path d="m8 4-5 8 5 8M16 4l5 8-5 8"/>', 'paintbrush': '<path d="m14 6 4 4M3 21c4 0 6-2 6-5l9-11a2 2 0 0 1 3 3L10 19c-2 2-4 2-7 2Z"/>',
+                'square-terminal': '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 9 3 3-3 3M13 16h4"/>',
+                'blocks': '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M11 7h4a2 2 0 0 1 2 2v4M7 11v4a2 2 0 0 0 2 2h4"/>',
+                'panels-top-left': '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>',
+                'clipboard-list': '<rect x="5" y="4" width="14" height="18" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6"/>',
+                'folder': '<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+                'eye': '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+                'monitor-smartphone': '<rect x="2" y="4" width="14" height="12" rx="2"/><path d="M5 20h8M9 16v4"/><rect x="17" y="9" width="5" height="11" rx="1"/>',
+                'palette': '<path d="M12 3a9 9 0 0 0 0 18h1a2 2 0 0 0 2-2c0-1-1-2-1-3s1-2 2-2h3a3 3 0 0 0 3-3c0-5-4-8-10-8Z"/><circle cx="7" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="16" cy="8" r="1"/>',
+                'case-sensitive': '<path d="m3 17 5-11 5 11M5 13h6M15 11h6M18 8v11"/>',
+                'orbit': '<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="5" transform="rotate(-40 12 12)"/>',
+                'bug': '<rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V3M8 5l4 2 4-2M7 11H3m4 5H3m14-5h4m-4 5h4M9 12h6"/>',
+                'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>'
+            };
+            function iconMarkup(name, color) { return `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>` }
+            function renderMenu() {
+                $('menu').innerHTML = menuItems.map(([name, ico, color], i) => `<button class="menu-item ${i === active ? 'active' : ''}" data-index="${i}" type="button" title="${tr[lang].menu[i]}">${iconMarkup(ico, color)}<span>${tr[lang].menu[i]}</span></button>`).join('');
+                $('menu').querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { active = +btn.dataset.index; renderMenu() }));
+            }
+            function renderUpdates() {
+                const root = $('updates'); root.replaceChildren();
+                updates.forEach(id => {
+                    const row = document.createElement('div'); row.className = 'update';
+                    const label = document.createElement('span'); label.textContent = `${tr[lang].update} ${id}`;
+                    const close = document.createElement('button'); close.className = 'remove-update'; close.type = 'button'; close.textContent = '×'; close.title = lang === 'en' ? 'Remove update' : 'حذف التحديث'; close.setAttribute('aria-label', close.title);
+                    close.addEventListener('click', () => { updates = updates.filter(x => x !== id); renderUpdates() });
+                    row.append(label, close); root.append(row);
+                });
+                root.scrollTop = root.scrollHeight;
+            }
+            function addUpdate() { updates.push(nextId++); renderUpdates() }
+            function clearUpdates() { updates = []; nextId = 1; renderUpdates() }
+            function applyLanguage() {
+                document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                const t = tr[lang];
+                [['site-title', 'title'], ['language-label', 'language'], ['add-label', 'add'], ['clear-label', 'clear'], ['article-title', 'article'], ['intro', 'intro'], ['html-copy', 'html'], ['css-copy', 'css'], ['js-copy', 'js'], ['together-title', 'together'], ['together-copy', 'togetherCopy'], ['footer', 'footer']].forEach(([id, key]) => $(id).textContent = t[key]);
+                renderMenu(); renderUpdates();
+                if ($('heart-status').dataset.error === 'yes') showHeartError();
+            }
+            $('add-btn').addEventListener('click', addUpdate); $('plus-btn').addEventListener('click', addUpdate);
+            $('clear-btn').addEventListener('click', clearUpdates);
+            $('language-btn').addEventListener('click', () => { lang = lang === 'en' ? 'ar' : 'en'; applyLanguage() });
+            const handle = $('resize-handle'), shell = document.querySelector('.shell'); let dragging = false;
+            function setSidebarWidth(px) {
+                let max = Math.max(95, shell.clientWidth - 82);
+                let val = Math.round(Math.min(Math.max(95, px), Math.min(max, 600)));
+                document.documentElement.style.setProperty('--sidebar-width', val + 'px'); handle.setAttribute('aria-valuenow', val);
+            }
+            handle.addEventListener('pointerdown', e => { e.preventDefault(); dragging = true; handle.classList.add('dragging'); handle.setPointerCapture(e.pointerId); document.body.style.userSelect = 'none' });
+            handle.addEventListener('pointermove', e => { if (!dragging) return; const r = shell.getBoundingClientRect(); setSidebarWidth(lang === 'en' ? e.clientX - r.left : r.right - e.clientX) });
+            function stopDrag() { dragging = false; handle.classList.remove('dragging'); document.body.style.userSelect = '' }
+            handle.addEventListener('pointerup', stopDrag); handle.addEventListener('pointercancel', stopDrag);
+            handle.addEventListener('keydown', e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); let w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width')); setSidebarWidth(w + (e.key === 'ArrowRight' ? 1 : -1) * (lang === 'ar' ? -12 : 12)) });
+            new ResizeObserver(() => { let w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width')); setSidebarWidth(w) }).observe(shell);
+            function showHeartError() {
+                $('heart-status').dataset.error = 'yes'; $('heart-status').hidden = false;
+                $('heart-info').innerHTML = '';
+                const strong = document.createElement('strong'); strong.textContent = tr[lang].heartMissing;
+                const note = document.createElement('small'); note.textContent = tr[lang].heartHint;
+                $('heart-info').append(strong, document.createElement('br'), note);
+            }
+            applyLanguage();
+            // Load Three.js as an ES module. It needs Internet for the CDN and human-heart.glb beside the HTML file.
+            window.__heartFail = showHeartError;
+        })();
+    </script>
+    <script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js"}}
+</script>
+    <script type="module">
+        const status = document.getElementById('heart-status');
+        const canvas = document.getElementById('heart-view');
+        const panel = document.getElementById('heart-panel');
+        try {
+            const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js');
+            const { OrbitControls } = await import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js');
+            const { GLTFLoader } = await import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.4;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(38, 1, .01, 1000);
+            camera.position.set(0, 0, 4);
+            scene.add(new THREE.HemisphereLight(0xffffff, 0x8d5861, 2.6));
+            const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(3, 5, 6); scene.add(key);
+            const fill = new THREE.DirectionalLight(0xffa59c, 1.1); fill.position.set(-4, -2, 2); scene.add(fill);
+            const rim = new THREE.DirectionalLight(0xffffff, 1.8); rim.position.set(-2, 3, -5); scene.add(rim);
+            const controls = new OrbitControls(camera, canvas);
+            controls.enableDamping = true; controls.dampingFactor = .08;
+            controls.enablePan = false; controls.rotateSpeed = .75; controls.zoomSpeed = .85;
+            controls.autoRotate = true; controls.autoRotateSpeed = .65;
+            let fittedDistance = 4;
+            function size() { const w = Math.max(1, panel.clientWidth), h = Math.max(1, panel.clientHeight); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix() }
+            new ResizeObserver(size).observe(panel); size();
+            const loader = new GLTFLoader();
+            loader.load('./human-heart.glb', gltf => {
+                const object = gltf.scene;
+                object.traverse(child => { if (child.isMesh) { child.castShadow = false; child.frustumCulled = false } });
+                const bounds = new THREE.Box3().setFromObject(object);
+                const center = bounds.getCenter(new THREE.Vector3());
+                const sz = bounds.getSize(new THREE.Vector3());
+                object.position.sub(center);
+                const group = new THREE.Group(); group.add(object); scene.add(group);
+                const radius = Math.max(sz.length() * .5, .001);
+                const vFov = THREE.MathUtils.degToRad(camera.fov);
+                const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+                fittedDistance = radius / Math.sin(Math.min(vFov, hFov) / 2) * 1.20;
+                camera.position.set(0, 0, fittedDistance);
+                camera.near = Math.max(.001, radius * .005); camera.far = Math.max(100, radius * 100); camera.updateProjectionMatrix();
+                controls.target.set(0, 0, 0); controls.minDistance = radius * 1.15; controls.maxDistance = fittedDistance * 3; controls.update();
+                status.hidden = true;
+            }, undefined, err => { console.warn('heart model load failed', err); window.__heartFail() });
+            function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera) } animate();
+        } catch (err) { console.warn('Three.js failed to load', err); window.__heartFail() }
+    </script>
+</body>
+
+</html>
